@@ -105,3 +105,11 @@ install(TARGETS test_sim_repeat
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+add_executable(test_dataloader src/test_dataloader.cpp)
+target_link_libraries(test_dataloader ov_msckf_lib ${thirdparty_libraries})
+install(TARGETS test_dataloader
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
