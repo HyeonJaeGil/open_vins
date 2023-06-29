@@ -78,6 +78,16 @@ struct CameraData {
   }
 };
 
+struct OneHotData {
+  ov_core::CameraData camera_data;
+  ov_core::ImuData imu_data;
+
+  enum  class SensorType {
+    CAMERA,
+    IMU
+  } sensor_type;
+};
+
 } // namespace ov_core
 
 #endif // OV_CORE_SENSOR_DATA_H
