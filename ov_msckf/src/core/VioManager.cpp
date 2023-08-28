@@ -125,6 +125,15 @@ VioManager::VioManager(VioManagerOptions &params_) : thread_init_running(false),
   //===================================================================================
   //===================================================================================
 
+  // newly added features: save trajectory to txt
+  this->on_move_traj_stream.open("/home/hj/openvins/on_move_traj.txt");
+  on_move_traj_stream << std::fixed << std::setprecision(9);
+  on_move_traj_stream << "# timestamp (sec), x, y, z, qx, qy, qz, qw" << std::endl;
+
+  //===================================================================================
+  //===================================================================================
+  //===================================================================================
+
   // Let's make a feature extractor
   // NOTE: after we initialize we will increase the total number of feature tracks
   // NOTE: we will split the total number of features over all cameras uniformly
@@ -649,6 +658,16 @@ void VioManager::do_feature_propagate_update(const ov_core::CameraData &message)
     distance += dx.norm();
   }
   timelastupdate = message.timestamp;
+
+  if (state->_imu->vel().norm() < 0.1)
+    return;
+  PRINT_INFO("v = %.3f\n", state->_imu->vel().norm());
+
+  double t_ItoC = state->_calib_dt_CAMtoIMU->value()(0);
+  double timestamp_inI = state->_timestamp + t_ItoC;
+  on_move_traj_stream << timestamp_inI << " " << state->_imu->pos()(0) << " " << state->_imu->pos()(1) << " " << state->_imu->pos()(2)
+                      << " " << state->_imu->quat()(0) << " " << state->_imu->quat()(1) << " " << state->_imu->quat()(2) << " "
+                      << state->_imu->quat()(3) << std::endl;
 
   // Debug, print our current state
   PRINT_INFO("q_GtoI = %.3f,%.3f,%.3f,%.3f | p_IinG = %.3f,%.3f,%.3f | dist = %.2f (meters)\n", state->_imu->quat()(0),
