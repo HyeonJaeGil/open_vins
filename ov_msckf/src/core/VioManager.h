@@ -241,6 +241,10 @@ protected:
   std::map<size_t, Eigen::Matrix3d> active_feat_linsys_A;
   std::map<size_t, Eigen::Vector3d> active_feat_linsys_b;
   std::map<size_t, int> active_feat_linsys_count;
+
+  // For debugging only
+  std::ofstream on_move_traj_stream;
+
 };
 
 } // namespace ov_msckf
