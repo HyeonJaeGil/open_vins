@@ -280,28 +280,6 @@ struct VioManagerOptions {
         camera_extrinsics.insert({i, cam_eigen});
       }
       parser->parse_config("use_mask", use_mask);
-      if (use_mask) {
-        for (int i = 0; i < state_options.num_cameras; i++) {
-          std::string mask_path;
-          std::string mask_node = "mask" + std::to_string(i);
-          parser->parse_config(mask_node, mask_path);
-          std::string total_mask_path = parser->get_config_folder() + mask_path;
-          if (!boost::filesystem::exists(total_mask_path)) {
-            PRINT_ERROR(RED "VioManager(): invalid mask path:\n" RESET);
-            PRINT_ERROR(RED "\t- mask%d - %s\n" RESET, i, total_mask_path.c_str());
-            std::exit(EXIT_FAILURE);
-          }
-          cv::Mat mask = cv::imread(total_mask_path, cv::IMREAD_GRAYSCALE);
-          masks.insert({i, mask});
-          if (mask.cols != camera_intrinsics.at(i)->w() || mask.rows != camera_intrinsics.at(i)->h()) {
-            PRINT_ERROR(RED "VioManager(): mask size does not match camera!\n" RESET);
-            PRINT_ERROR(RED "\t- mask%d - %s\n" RESET, i, total_mask_path.c_str());
-            PRINT_ERROR(RED "\t- mask%d - %d x %d\n" RESET, mask.cols, mask.rows);
-            PRINT_ERROR(RED "\t- cam%d - %d x %d\n" RESET, camera_intrinsics.at(i)->w(), camera_intrinsics.at(i)->h());
-            std::exit(EXIT_FAILURE);
-          }
-        }
-      }
 
       // IMU intrinsics
       Eigen::Matrix3d Tw = Eigen::Matrix3d::Identity();

@@ -111,8 +111,8 @@ public:
   /// Callback for monocular cameras information
   void callback_monocular(const sensor_msgs::ImageConstPtr &msg0, int cam_id0);
 
-  /// Callback for synchronized stereo camera information
-  void callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0, int cam_id1);
+  /// Callback for synchronized monocular camera and mask information
+  void callback_monocular_mask(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0);
 
 protected:
   /// Publish the current state
