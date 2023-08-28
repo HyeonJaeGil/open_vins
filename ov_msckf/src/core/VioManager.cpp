@@ -125,10 +125,23 @@ VioManager::VioManager(VioManagerOptions &params_) : thread_init_running(false),
   //===================================================================================
   //===================================================================================
 
-  // newly added features: save trajectory to txt
-  this->on_move_traj_stream.open("/home/hj/openvins/on_move_traj.txt");
-  on_move_traj_stream << std::fixed << std::setprecision(9);
-  on_move_traj_stream << "# timestamp (sec), x, y, z, qx, qy, qz, qw" << std::endl;
+  // Save trajectory to txt
+  if (params.save_on_move_state) {
+
+    // If the file exists, then delete it
+    if (boost::filesystem::exists(params.filepath_on_move_traj)) {
+      boost::filesystem::remove(params.filepath_on_move_traj);
+      PRINT_INFO(YELLOW "[STATS]: found old file found, deleted...\n" RESET);
+    }
+    // Create the directory that we will open the file in
+    boost::filesystem::path p(params.filepath_on_move_traj);
+    boost::filesystem::create_directories(p.parent_path());
+    // Open our statistics file!
+    this->on_move_traj_stream.open(params.filepath_on_move_traj);
+    on_move_traj_stream << std::fixed << std::setprecision(9);
+    on_move_traj_stream << "# timestamp (sec), x, y, z, qx, qy, qz, qw" << std::endl;
+
+  }
 
   //===================================================================================
   //===================================================================================

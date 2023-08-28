@@ -63,6 +63,7 @@ struct VioManagerOptions {
     print_and_load_estimator(parser);
     print_and_load_trackers(parser);
     print_and_load_noise(parser);
+    print_and_load_paths(parser);
 
     // needs to be called last
     print_and_load_state(parser);
@@ -389,6 +390,30 @@ struct VioManagerOptions {
     ss << "q_GYROtoI: " << q_GYROtoIMU.transpose() << std::endl;
     ss << "q_ACCtoI: " << q_ACCtoIMU.transpose() << std::endl;
     PRINT_DEBUG(ss.str().c_str());
+  }
+
+  // PATHS ==================================
+
+  // Whether to save the state on every move
+  bool save_on_move_state = false;
+
+  // Output path for saving the state on every move
+  std::string filepath_on_move_traj;
+
+  /**
+   * @brief This function will load print out all path parameters loaded.
+   * @param parser If not null, this parser will be used to load our parameters
+   */
+  void print_and_load_paths(const std::shared_ptr<ov_core::YamlParser> &parser = nullptr) {
+    PRINT_DEBUG("PATHS:\n");
+    state_options.print(parser);
+    init_options.print_and_load(parser);
+    if (parser != nullptr) {
+      parser->parse_config("save_on_move_state", save_on_move_state);
+      parser->parse_config("filepath_on_move_traj", filepath_on_move_traj);
+    }
+    PRINT_DEBUG("  - save_on_move_state?: %d\n", (int)save_on_move_state);
+    PRINT_DEBUG("  - filepath_on_move_traj: %s\n", filepath_on_move_traj.c_str());
   }
 
   // TRACKERS ===============================

@@ -72,6 +72,10 @@ filepath_est: "/tmp/ov_estimate.txt"
 filepath_std: "/tmp/ov_estimate_std.txt"
 filepath_gt: "/tmp/ov_groundtruth.txt"
 
+# option to save the state of the system at each update
+save_on_move_state: true
+filepath_on_move_traj: "/home/hj/openvins/new/on_move_traj.txt"
+
 # ==================================================================
 # ==================================================================
 
