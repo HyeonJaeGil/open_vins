@@ -160,28 +160,25 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
   sub_imu = _nh->subscribe(topic_imu, 1000, &ROS1Visualizer::callback_inertial, this);
   PRINT_INFO("subscribing to IMU: %s\n", topic_imu.c_str());
 
-  // Logic for sync stereo subscriber
-  // https://answers.ros.org/question/96346/subscribe-to-two-image_raws-with-one-function/?answer=96491#post-id-96491
-  if (_app->get_params().state_options.num_cameras == 2) {
-    // Read in the topics
-    std::string cam_topic0, cam_topic1;
+  // Logic for sync monocular mask subscriber
+  if (_app->get_params().use_mask) {
+    std::string cam_topic0, mask_topic0;
     _nh->param<std::string>("topic_camera" + std::to_string(0), cam_topic0, "/cam" + std::to_string(0) + "/image_raw");
-    _nh->param<std::string>("topic_camera" + std::to_string(1), cam_topic1, "/cam" + std::to_string(1) + "/image_raw");
+    _nh->param<std::string>("topic_mask" + std::to_string(0), mask_topic0, "/cam" + std::to_string(0) + "/image_mask");
     parser->parse_external("relative_config_imucam", "cam" + std::to_string(0), "rostopic", cam_topic0);
-    parser->parse_external("relative_config_imucam", "cam" + std::to_string(1), "rostopic", cam_topic1);
-    // Create sync filter (they have unique pointers internally, so we have to use move logic here...)
+    parser->parse_external("relative_config_imucam", "cam" + std::to_string(0), "masktopic", mask_topic0);
+    // Create sync filter
     auto image_sub0 = std::make_shared<message_filters::Subscriber<sensor_msgs::Image>>(*_nh, cam_topic0, 1);
-    auto image_sub1 = std::make_shared<message_filters::Subscriber<sensor_msgs::Image>>(*_nh, cam_topic1, 1);
-    auto sync = std::make_shared<message_filters::Synchronizer<sync_pol>>(sync_pol(10), *image_sub0, *image_sub1);
-    sync->registerCallback(boost::bind(&ROS1Visualizer::callback_stereo, this, _1, _2, 0, 1));
+    auto mask_sub0 = std::make_shared<message_filters::Subscriber<sensor_msgs::Image>>(*_nh, mask_topic0, 1);
+    auto sync = std::make_shared<message_filters::Synchronizer<sync_pol>>(sync_pol(10), *image_sub0, *mask_sub0);
+    sync->registerCallback(boost::bind(&ROS1Visualizer::callback_monocular_mask, this, _1, _2, 0));
     // Append to our vector of subscribers
     sync_cam.push_back(sync);
     sync_subs_cam.push_back(image_sub0);
-    sync_subs_cam.push_back(image_sub1);
-    PRINT_INFO("subscribing to cam (stereo): %s\n", cam_topic0.c_str());
-    PRINT_INFO("subscribing to cam (stereo): %s\n", cam_topic1.c_str());
-  } else {
-    // Now we should add any non-stereo callbacks here
+    sync_subs_cam.push_back(mask_sub0);
+    PRINT_INFO("subscribing to cam (mono): %s\n", cam_topic0.c_str());
+    PRINT_INFO("subscribing to mask (mono): %s\n", mask_topic0.c_str());
+  } else { // Logic for monocular subscriber
     for (int i = 0; i < _app->get_params().state_options.num_cameras; i++) {
       // read in the topic
       std::string cam_topic;
@@ -534,8 +531,7 @@ void ROS1Visualizer::callback_monocular(const sensor_msgs::ImageConstPtr &msg0, 
   std::sort(camera_queue.begin(), camera_queue.end());
 }
 
-void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0,
-                                     int cam_id1) {
+void ROS1Visualizer::callback_monocular_mask(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0) {
 
   // Check if we should drop this image
   double timestamp = msg0->header.stamp.toSec();
@@ -554,7 +550,7 @@ void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, con
     return;
   }
 
-  // Get the image
+  // Get the mask
   cv_bridge::CvImageConstPtr cv_ptr1;
   try {
     cv_ptr1 = cv_bridge::toCvShare(msg1, sensor_msgs::image_encodings::MONO8);
@@ -567,20 +563,8 @@ void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, con
   ov_core::CameraData message;
   message.timestamp = cv_ptr0->header.stamp.toSec();
   message.sensor_ids.push_back(cam_id0);
-  message.sensor_ids.push_back(cam_id1);
   message.images.push_back(cv_ptr0->image.clone());
-  message.images.push_back(cv_ptr1->image.clone());
-
-  // Load the mask if we are using it, else it is empty
-  // TODO: in the future we should get this from external pixel segmentation
-  if (_app->get_params().use_mask) {
-    message.masks.push_back(_app->get_params().masks.at(cam_id0));
-    message.masks.push_back(_app->get_params().masks.at(cam_id1));
-  } else {
-    // message.masks.push_back(cv::Mat(cv_ptr0->image.rows, cv_ptr0->image.cols, CV_8UC1, cv::Scalar(255)));
-    message.masks.push_back(cv::Mat::zeros(cv_ptr0->image.rows, cv_ptr0->image.cols, CV_8UC1));
-    message.masks.push_back(cv::Mat::zeros(cv_ptr1->image.rows, cv_ptr1->image.cols, CV_8UC1));
-  }
+  message.masks.push_back(cv_ptr1->image.clone());
 
   // append it to our queue of images
   std::lock_guard<std::mutex> lck(camera_queue_mtx);
