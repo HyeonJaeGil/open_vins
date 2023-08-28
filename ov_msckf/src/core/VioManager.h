@@ -242,7 +242,7 @@ protected:
   std::map<size_t, Eigen::Vector3d> active_feat_linsys_b;
   std::map<size_t, int> active_feat_linsys_count;
 
-  // For debugging only
+  // For saving our trajectory
   std::ofstream on_move_traj_stream;
 
 };
