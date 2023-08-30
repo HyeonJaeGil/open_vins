@@ -10,9 +10,9 @@
     <arg name="use_stereo"  default="false" />
     <arg name="bag_start"   default="0" /> <!-- v1-2: 0, mh1: 40, mh2: 35, mh3: 17.5, mh4-5: 15 -->
     <arg name="bag_rate"    default="1" />
-    <arg name="dataset"     default="STHEREO-07" /> <!-- V1_01_easy, V1_02_medium, V2_02_medium -->
+    <arg name="dataset"     default="STHEREO-09" /> <!-- V1_01_easy, V1_02_medium, V2_02_medium -->
     <arg name="dobag"       default="true" /> <!-- if we should play back the bag -->
-    <arg name="bag"         default="/home/hj/$(arg dataset).bag" />
+    <arg name="bag"         default="/media/hj/T7/rosbag/$(arg dataset).bag" />
 <!--    <arg name="bag"         default="/home/patrick/datasets/$(arg config)/$(arg dataset).bag" />-->
 <!--    <arg name="bag"         default="/datasets/$(arg config)/$(arg dataset).bag" />-->
 
@@ -66,5 +66,6 @@
         </node>
     </group>
 
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ov_msckf)/launch/display.rviz" required="true" />
 
 </launch>
