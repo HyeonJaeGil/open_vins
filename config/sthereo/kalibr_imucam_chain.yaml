@@ -2,14 +2,14 @@
 
 cam0:
   T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
-    - [ 0.0,  0.0, 1.0,  0.31]
-    - [-1.0,  0.0, 0.0, -0.20]
-    - [ 0.0, -1.0, 0.0, -0.24]
+    - [ 0.0,  0.0, 1.0,  0.24]
+    - [-1.0,  0.0, 0.0,  0.31]
+    - [ 0.0, -1.0, 0.0,  -0.2]
     - [ 0.0,  0.0, 0.0,  1.00]
   camera_model: pinhole
   distortion_coeffs: [-0.4237, 0.1477, 0.0, 0.0]
   distortion_model: radtan
-  intrinsics: [429.4329, 429.5314, 328.5247, 260.0027] #fu, fv, cu, cv
+  intrinsics: [447.7496, 447.4655, 328.5247, 260.0027] #fu, fv, cu, cv
   resolution: [640, 512]
   rostopic: /cam0/image_raw
   masktopic: /cam0/image_mask
