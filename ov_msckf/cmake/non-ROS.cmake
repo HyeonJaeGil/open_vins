@@ -113,3 +113,11 @@ install(TARGETS test_dataloader
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+add_executable(run_msckf src/run_msckf.cpp)
+target_link_libraries(run_msckf ov_msckf_lib ${thirdparty_libraries})
+install(TARGETS run_msckf
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
