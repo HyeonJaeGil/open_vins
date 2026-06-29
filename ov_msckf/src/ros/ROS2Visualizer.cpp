@@ -61,6 +61,8 @@ ROS2Visualizer::ROS2Visualizer(std::shared_ptr<rclcpp::Node> node, std::shared_p
   PRINT_DEBUG("Publishing: %s\n", pub_points_aruco->get_topic_name());
   pub_points_sim = node->create_publisher<sensor_msgs::msg::PointCloud2>("points_sim", 2);
   PRINT_DEBUG("Publishing: %s\n", pub_points_sim->get_topic_name());
+  pub_points_all = node->create_publisher<sensor_msgs::msg::PointCloud2>("points_all", 2);
+  PRINT_DEBUG("Publishing: %s\n", pub_points_all->get_topic_name());
 
   // Our tracking image
   it_pub_tracks = it.advertise("trackhist", 2);
@@ -675,7 +677,8 @@ void ROS2Visualizer::publish_features() {
 
   // Check if we have subscribers
   if (pub_points_msckf->get_subscription_count() == 0 && pub_points_slam->get_subscription_count() == 0 &&
-      pub_points_aruco->get_subscription_count() == 0 && pub_points_sim->get_subscription_count() == 0)
+      pub_points_aruco->get_subscription_count() == 0 && pub_points_sim->get_subscription_count() == 0 &&
+      pub_points_all->get_subscription_count() == 0)
     return;
 
   // Get our good MSCKF features
@@ -701,6 +704,27 @@ void ROS2Visualizer::publish_features() {
   std::vector<Eigen::Vector3d> feats_sim = _sim->get_map_vec();
   sensor_msgs::msg::PointCloud2 cloud_SIM = ROSVisualizerHelper::get_ros_pointcloud(_node, feats_sim);
   pub_points_sim->publish(cloud_SIM);
+}
+
+void ROS2Visualizer::publish_points_all(const std::unordered_map<size_t, Eigen::Vector3d> &active_tracks_posinG) {
+
+  // Keep the latest triangulated global position for each feature id.
+  for (const auto &feattimes : active_tracks_posinG) {
+    size_t featid = feattimes.first;
+    Eigen::Vector3d pFinG = feattimes.second;
+    accumulated_points_all[featid] = pFinG;
+  }
+
+  if (pub_points_all->get_subscription_count() == 0)
+    return;
+
+  std::vector<Eigen::Vector3d> feats_all;
+  feats_all.reserve(accumulated_points_all.size());
+  for (const auto &feattimes : accumulated_points_all) {
+    feats_all.push_back(feattimes.second);
+  }
+  sensor_msgs::msg::PointCloud2 cloud_ALL = ROSVisualizerHelper::get_ros_pointcloud(_node, feats_all);
+  pub_points_all->publish(cloud_ALL);
 }
 
 void ROS2Visualizer::publish_groundtruth() {
@@ -846,6 +870,8 @@ void ROS2Visualizer::publish_loopclosure_information() {
     return;
   if (active_tracks_time1 != active_tracks_time2)
     return;
+
+  publish_points_all(active_tracks_posinG);
 
   // Default header
   std_msgs::msg::Header header;
